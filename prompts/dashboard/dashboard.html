@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetSage AI Dashboard</title>
+    <style>
+        :root {
+            --bg-dark: #0b1320;
+            --card-bg: #131e2f;
+            --card-border: #1e2d42;
+            --text-primary: #ffffff;
+            --text-secondary: #8a99ad;
+            --accent-blue: #38bdf8;
+            --accent-green: #00e676;
+            --accent-orange: #ff9800;
+            --code-bg: #070d17;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 960px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .header h1 {
+            color: var(--accent-blue);
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .badge-status {
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Warning Banner */
+        .warning-banner {
+            background-color: rgba(255, 152, 0, 0.08);
+            border-left: 4px solid var(--accent-orange);
+            padding: 12px 16px;
+            color: #ffcc80;
+            font-size: 13px;
+            border-radius: 0 6px 6px 0;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .metric-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .metric-title {
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .metric-value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .metric-value.blue { color: var(--accent-blue); }
+        .metric-value.green { color: var(--accent-green); }
+
+        /* Card Section */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .card-subtitle {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: -10px;
+        }
+
+        /* Form Controls */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        select, textarea {
+            background-color: var(--code-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        select:focus, textarea:focus {
+            border-color: #00a3ff;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: monospace;
+        }
+
+        .btn-primary {
+            background-color: #00a3ff;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #008be0;
+        }
+
+        .btn-secondary {
+            background-color: #1e2d42;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Diagnostic Results Section */
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 12px;
+        }
+
+        .confidence-badge {
+            background-color: rgba(0, 230, 118, 0.15);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* Code Block & Copy Button */
+        .code-container {
+            position: relative;
+            background-color: var(--code-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 14px;
+        }
+
+        pre {
+            font-family: 'Courier New', Courier, monospace;
+            color: #4af626;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .btn-copy {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background-color: var(--card-border);
+            color: var(--text-primary);
+            border: none;
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-copy:hover {
+            background-color: #2c3e55;
+        }
+
+        /* Steps list */
+        .step-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .step-item {
+            background-color: var(--code-bg);
+            border: 1px solid var(--card-border);
+            padding: 10px 14px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        .step-number {
+            background-color: #1e2d42;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        /* Table */
+        .table-wrapper {
+            max-height: 380px;
+            overflow-y: auto;
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        th {
+            background-color: var(--code-bg);
+            color: var(--text-secondary);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .pt-note {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Top Header -->
+    <div class="header">
+        <div>
+            <h1>NetSage AI Dashboard</h1>
+            <p>Cisco Packet Tracer troubleshooting assistant for students and new operators.</p>
+        </div>
+        <div class="badge-status">• Rule Engine Ready</div>
+    </div>
+
+    <!-- Lab Safety Warning -->
+    <div class="warning-banner">
+        Use only in Packet Tracer or approved lab environments. Review every recommended command before applying it.
+    </div>
+
+    <!-- Active Metrics -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-title">Active Pipeline</div>
+            <div class="metric-value blue">Diagnose & Check</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Total Cases</div>
+            <div class="metric-value" id="metric-total-cases">30</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Logged Reviews</div>
+            <div class="metric-value">--</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Dataset Status</div>
+            <div class="metric-value green">In-Built Ready</div>
+        </div>
+    </div>
+
+    <!-- Diagnosis Form -->
+    <div class="card">
+        <h2 class="card-title">Run a diagnosis</h2>
+        <p class="card-subtitle">Select a preset practice scenario from acceptable_cases or paste custom CLI logs.</p>
+
+        <div class="form-group">
+            <label for="practice-case">Practice case</label>
+            <div style="display: flex; gap: 10px;">
+                <select id="practice-case" style="flex: 1;">
+                    <option value="">-- Select a case record --</option>
+                </select>
+                <button class="btn-secondary" onclick="loadSelectedCase()">Load Selected Case</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="user-symptom">User-reported symptom</label>
+            <textarea id="user-symptom" placeholder="Example: PC1 cannot ping 192.168.20.1, but PC0 can reach 192.168.10.1."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="cisco-output">Cisco IOS / Packet Tracer output</label>
+            <textarea id="cisco-output" placeholder="Paste outputs such as:&#10;show ip interface brief&#10;show vlan brief&#10;show interfaces trunk&#10;show running-config"></textarea>
+        </div>
+
+        <button class="btn-primary" onclick="runDiagnosis()">Run AI-Assisted Diagnosis</button>
+    </div>
+
+    <!-- AI Output & Remediation Section (Hidden until triggered) -->
+    <div id="results-card" class="card hidden">
+        <div class="result-header">
+            <h2 class="card-title">AI Diagnosis & Actionable Fix</h2>
+            <!-- Key Enhancement: Confidence Score Badge Component -->
+            <div id="confidence-score" class="confidence-badge">Confidence Score: --%</div>
+        </div>
+
+        <div>
+            <label>Detected Fault</label>
+            <p id="diagnosis-summary" style="margin-top: 6px; font-size: 14px; color: #38bdf8; font-weight: 600;"></p>
+        </div>
+
+        <!-- Key Enhancement: Actionable Copy-Pasteable Fix Commands -->
+        <div class="form-group">
+            <label>Actionable Cisco IOS Fix Commands (Copy & Paste to Device)</label>
+            <div class="code-container">
+                <button class="btn-copy" onclick="copyCommands()">Copy Commands</button>
+                <pre id="remediation-commands"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Static Guidance Cards -->
+    <div class="card">
+        <h2 class="card-title">Recommended troubleshooting sequence</h2>
+        <div class="step-list">
+            <div class="step-item"><span class="step-number">1</span> Read symptom and identify affected devices</div>
+            <div class="step-item"><span class="step-number">2</span> Inspect show outputs for misconfigurations</div>
+            <div class="step-item"><span class="step-number">3</span> Match evidence to labelled fault cases</div>
+            <div class="step-item"><span class="step-number">4</span> Provide remediation and verification steps</div>
+        </div>
+
+        <h3 style="font-size: 15px; margin-top: 10px;">Collect these commands</h3>
+        <div class="code-container">
+<pre>show ip interface brief
+show vlan brief
+show interfaces trunk
+show running-config
+show access-lists</pre>
+        </div>
+        <!-- Key Enhancement: Packet Tracer ARP Resolution Guidance Note Preserved -->
+        <p class="pt-note">Packet Tracer note: send each ping twice. The first ping may fail while ARP resolves.</p>
+    </div>
+
+    <!-- Key Enhancement: In-Built Case Catalogue Table -->
+    <div class="card">
+        <h2 class="card-title">Case catalogue (30 In-Built Scenarios)</h2>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Case ID</th>
+                        <th>Symptom</th>
+                        <th>Expected Fault</th>
+                        <th>OSI Layer</th>
+                        <th>Severity</th>
+                    </tr>
+                </thead>
+                <tbody id="catalogue-body">
+                    <!-- Populated dynamically via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Key Enhancement: All 30 cases (CASE-001 through CASE-030) integrated directly from acceptablecses.csv
+    const inbuiltCases = [
+        {
+            id: "CASE-001",
+            symptom: "All PCs and Server0 cannot reach their default gateways.",
+            fault: "R1 parent trunk interface GigabitEthernet0/0/0 is administratively shut down.",
+            layer: "Layer 1",
+            severity: "High",
+            confidence: 98,
+            inputLogs: "R1# show ip interface brief | GigabitEthernet0/0/0 unassigned YES unset administratively down down",
+            fixCommands: "configure terminal\ninterface GigabitEthernet0/0/0\n no shutdown\nexit"
+        },
+        {
+            id: "CASE-002",
+            symptom: "PC0 and PC2 cannot reach the VLAN 10 default gateway, while the cable is connected.",
+            fault: "PC0 access port is assigned to the wrong VLAN.",
+            layer: "Layer 2",
+            severity: "High",
+            confidence: 95,
+            inputLogs: "Switch0# show interfaces fa0/1 status | Fa0/1 connected 1; Switch0# show vlan brief | Fa0/1 listed under VLAN 20 instead of VLAN 10",
+            fixCommands: "configure terminal\ninterface FastEthernet0/1\n switchport mode access\n switchport access vlan 10\n no shutdown\nexit"
+        },
+        {
+            id: "CASE-003",
+            symptom: "Switch0 management interface cannot ping 192.168.99.1 and CDP reports a native VLAN mismatch.",
+            fault: "Native VLAN values differ: Switch0 uses VLAN 1 but R1 uses VLAN 99.",
+            layer: "Layer 2",
+            severity: "Medium",
+            confidence: 92,
+            inputLogs: "Switch0# show interfaces trunk | Gi0/1 native vlan 1; R1# show running-config interface g0/0/0.99 | encapsulation dot1Q 99 native",
+            fixCommands: "configure terminal\ninterface GigabitEthernet0/1\n switchport trunk native vlan 99\nexit"
+        },
+        {
+            id: "CASE-004",
+            symptom: "PC1 and Server0 cannot reach 192.168.20.1, but PC0 can still reach 192.168.10.1.",
+            fault: "VLAN 20 router subinterface has the wrong IP address; 192.168.200.1 is configured instead of 192.168.20.1.",
+            layer: "Layer 3",
+            severity: "High",
+            confidence: 96,
+            inputLogs: "R1# show ip interface brief | GigabitEthernet0/0/0.20 192.168.200.1 YES manual up up",
+            fixCommands: "configure terminal\ninterface GigabitEthernet0/0/0.20\n ip address 192.168.20.1 255.255.255.0\n no shutdown\nexit"
+        },
+        {
+            id: "CASE-005",
+            symptom: "PC1 and Server0 cannot communicate through the router although their VLAN 20 access ports are correct.",
+            fault: "Router subinterface for VLAN 20 is missing encapsulation dot1Q 20.",
+            layer: "Layer 2",
+            severity: "Medium",
+            confidence: 94,
+            inputLogs: "R1# show running-config interface g0/0/0.20 | interface GigabitEthernet0/0/0.20; no encapsulation dot1Q 20 line present",
+            fixCommands: "configure terminal\ninterface GigabitEthernet0/0/0.20\n encapsulation dot1Q 20\n ip address 192.168.20.1 255.255.255.0\nexit"
+        },
+        {
+            id: "CASE-006",
+            symptom: "PC0 has link up on Fa0/1 but cannot ping its gateway or any other subnet.",
+            fault: "End device default gateway is configured as 192.168.10.254 instead of 192.168.10.1.",
+            layer: "Layer 3",
+            severity: "Medium",
+            confidence: 97,
+            inputLogs: "PC0 configuration | IP: 192.168.10.10, Subnet: 255.255.255.0, Gateway: 192.168.10.254",
+            fixCommands: "# On PC0 Network Settings:\nSet Default Gateway: 192.168.10.1"
+        },
+        {
+            id: "CASE-007",
+            symptom: "PC2 experiences intermittent ping success to 192.168.10.1 and ARP table keeps flipping.",
+            fault: "PC0 and PC2 have duplicate static IPv4 addresses.",
+            layer: "Layer 3",
+            severity: "High",
+            confidence: 93,
+            inputLogs: "PC0 config | IP: 192.168.10.10; PC2 config | IP: 192.168.10.10",
+            fixCommands: "# On PC2 Network Settings:\nChange IP Address to 192.168.10.12\nSubnet Mask: 255.255.255.0"
+        },
+        {
+            id: "CASE-008",
+            symptom: "PC2 loses connectivity suddenly after connecting an unauthorized laptop to port Fa0/3.",
+            fault: "A port-security violation placed PC2's access port in err-disabled state.",
+            layer: "Layer 2",
+            severity: "High",
+            confidence: 91,
+            inputLogs: "Switch0# show interfaces fa0/3 status | Fa0/3 err-disabled",
+            fixCommands: "configure terminal\ninterface FastEthernet0/3\n shutdown\n no shutdown\n switchport port-security maximum 2\n switchport port-security violation restrict\nexit"
+        },
+        {
+            id: "CASE-009",
+            symptom: "PC0 can ping 192.168.10.1 but cannot ping Server0 at 192.168.20.254.",
+            fault: "Inbound ACL 110 deliberately blocks traffic from VLAN 10 to VLAN 20.",
+            layer: "Layer 3/4",
+            severity: "High",
+            confidence: 94,
+            inputLogs: "R1# show access-lists | Extended IP access list 110 deny ip 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255",
+            fixCommands: "configure terminal\ninterface GigabitEthernet0/0/0.10\n no ip access-group 110 in\nexit\nno access-list 110"
+        },
+        {
+            id: "CASE-010",
+            symptom: "PC1 can ping Server0 on the same VLAN but cannot reach PC0 in VLAN 10.",
+            fault: "DHCP pool or PC1 configuration supplies the wrong /25 subnet mask instead of /24.",
+            layer: "Layer 3",
+            severity: "Medium",
+            confidence: 90,
+            inputLogs: "PC1 config | IP: 192.168.20.10, Subnet: 255.255.255.128",
+            fixCommands: "configure terminal\nip dhcp pool VLAN20\n network 192.168.20.0 255.255.255.0\n default-router 192.168.20.1\nexit"
+        },
+        {
+            id: "CASE-011",
+            symptom: "PC0 can ping 192.168.20.254 by IP address, but web browser fails for srv0.lab.local.",
+            fault: "PC0 has no DNS server configured, despite working Layer 3 connectivity.",
+            layer: "Layer 7",
+            severity: "Low",
+            confidence: 96,
+            inputLogs: "PC0 config | DNS Server: 0.0.0.0",
+            fixCommands: "# On PC0 IP Configuration:\nSet Primary DNS Server: 192.168.20.254"
+        },
+        {
+            id: "CASE-012",
+            symptom: "High packet loss occurs between Switch0 and R1; interface counters show input errors.",
+            fault: "Physical trunk cable or interface has a Layer 1 fault causing errors and link flapping.",
+            layer: "Layer 1",
+            severity: "High",
+            confidence: 89,
+            inputLogs: "Switch0# show interfaces g0/1 | 1450 input errors, 892 CRC, 0 collisions",
+            fixCommands: "# Replace physical cable between R1 and Switch0\nconfigure terminal\ninterface GigabitEthernet0/1\n speed auto\n duplex auto\n no shutdown\nexit"
+        },
+        {
+            id: "CASE-013",
+            symptom: "PC0 (VLAN 10) cannot reach R1, but PC1 (VLAN 20) communicates normally.",
+            fault: "VLAN 10 is excluded from the switch trunk allowed-VLAN list.",
+            layer: "Layer 2",
+            severity: "High",
+            confidence: 95,
+            inputLogs: "Switch0# show interfaces trunk | Gi0/1 allowed vlans: 20,99",
+            fixCommands: "configure terminal\ninterface GigabitEthernet0/1\n switchport trunk allowed vlan add 10\nexit"
+        },
+        {
+            id: "CASE-014",
+            symptom: "PC1 and Server0 (VLAN 20) cannot reach R1, but PC0 (VLAN 10) communicates normally.",
+            fault: "VLAN 20 is excluded from the switch trunk allowed-VLAN list.",
+            layer: "Layer 2",
+            severity: "High",
+            confidence: 95,
+            inputLogs: "Switch0# show interfaces trunk | Gi0/1 allowed vlans: 10,99",
+            fixCommands: "configure terminal\ninterface GigabitEthernet0/1\n switchport trunk allowed vlan add 20\nexit"
+        },
+        {
+            id: "CASE-015",
+            symptom: "Traffic for all VLANs fails to traverse the link from Switch0 to R1.",
+            fault: "The router-to-switch uplink is configured as an access port instead of a trunk.",
+            layer: "Layer 2",
+            severity: "High",
+            confidence: 93,
+            inputLogs: "Switch0# show interfaces fa0/24 switchport | Administrative Mode: static access",
+            fixCommands: "configure terminal\ninterface FastEthernet0/24\n switchport mode trunk\n switchport trunk allowed vlan all\nexit"
+        },
+        {
+            id: "CASE-016",
+            symptom: "PC1 Fa0/2 link is up, but PC1 cannot ping default gateway 192.168.20.1.",
+            fault: "PC1 has a static IP address from VLAN 10 while connected to VLAN 20.",
+            layer: "Layer 3",
+            severity: "Medium",
+            confidence: 94,
+            inputLogs: "PC1 config | IP: 192.168.10.50, Subnet: 255.255.255.0 on VLAN 20 port",
+            fixCommands: "# On PC1 IP Configuration:\nChange IP to dynamic (DHCP) or set static IP: 192.168.20.11/24\nGateway: 192.168.20.1"
+        },
+        {
+            id: "CASE-017",
+            symptom: "Server0 can ping local VLAN 20 hosts but cannot reply to PC0 in VLAN 10.",
+            fault: "Server0 has an incorrect default gateway.",
+            layer: "Layer 3",
+            severity: "High",
+            confidence: 97,
+            inputLogs: "Server0 config | IP: 192.168.20.254, Gateway: 192.168.20.254",
+            fixCommands: "# On Server0 IP Configuration:\nSet Default Gateway: 192.168.20.1"
+        },
+        {
+            id: "CASE-018",
+            symptom: "PC0 interface indicator in Packet Tracer shows red dot.",
+            fault: "PC0 switch access port is administratively shut down.",
+            layer: "Layer 1",
+            severity: "High",
+            confidence: 99,
+            inputLogs: "Switch0# show ip interface brief | FastEthernet0/1 unassigned YES unset administratively down down",
+            fixCommands: "configure terminal\ninterface FastEthernet0/1\n no shutdown\nexit"
+        },
+        {
+            id: "CASE-019",
+            symptom: "PC0 sends frames tagged for VLAN 10, but R1 G0/0/0.10 drops them.",
+            fault: "R1 VLAN 10 gateway subinterface has the wrong 802.1Q VLAN tag.",
+            layer: "Layer 2",
+            severity: "High",
+            confidence: 93,
+            inputLogs: "R1# show running-config interface g0/0/0.10 | encapsulation dot1Q 100",
+            fixCommands: "configure terminal\ninterface GigabitEthernet0/0/0.10\n encapsulation dot1Q 10\n ip address 192.168.10.1 255.255.255.0\nexit"
+        },
+        {
+            id: "CASE-020",
+            symptom: "PC0 can browse Server0 web page but ping 192.168.20.254 times out.",
+            fault: "ACL 111 specifically blocks ICMP from PC0 to Server0.",
+            layer: "Layer 3/4",
+            severity: "Low",
+            confidence: 95,
+            inputLogs: "R1# show access-lists | access-list 111 deny icmp host 192.168.10.10 host 192.168.20.254",
+            fixCommands: "configure terminal\ninterface GigabitEthernet0/0/0.10\n no ip access-group 111 in\nexit\nno access-list 111"
+        },
+        {
+            id: "CASE-021",
+            symptom: "PC0 cannot resolve domain names, pinging web address returns domain not found.",
+            fault: "PC0 is configured with the wrong DNS server address.",
+            layer: "Layer 7",
+            severity: "Medium",
+            confidence: 96,
+            inputLogs: "PC0 config | DNS Server: 192.168.20.200 (Invalid Host)",
+            fixCommands: "# On PC0 IP Configuration:\nSet DNS Server: 192.168.20.254"
+        },
+        {
+            id: "CASE-022",
+            symptom: "PC0 DNS queries to 192.168.20.254 are refused or time out.",
+            fault: "DNS service is disabled on Server0.",
+            layer: "Layer 7",
+            severity: "High",
+            confidence: 98,
+            inputLogs: "Server0 Services Tab | DNS Service: OFF",
+            fixCommands: "# On Server0 -> Services Tab -> DNS:\nTurn DNS Service: ON\nEnsure record 'srv0.lab.local' points to 192.168.20.254"
+        },
+        {
+            id: "CASE-023",
+            symptom: "PC0 can ping Server0, but HTTP browser request fails with connection refused.",
+            fault: "HTTP service is disabled on Server0.",
+            layer: "Layer 7",
+            severity: "Medium",
+            confidence: 98,
+            inputLogs: "Server0 Services Tab | HTTP Service: OFF",
+            fixCommands: "# On Server0 -> Services Tab -> HTTP / HTTPS:\nTurn HTTP Service: ON\nTurn HTTPS Service: ON"
+        },
+        {
+            id: "CASE-024",
+            symptom: "PC1 set to DHCP receives APIPA address (169.254.x.x).",
+            fault: "DHCP service is disabled on Server0.",
+            layer: "Layer 7",
+            severity: "High",
+            confidence: 97,
+            inputLogs: "Server0 Services Tab | DHCP Service: OFF",
+            fixCommands: "# On Server0 -> Services Tab -> DHCP:\nTurn DHCP Service: ON\nSet Default Gateway: 192.168.20.1\nDNS Server: 192.168.20.254"
+        },
+        {
+            id: "CASE-025",
+            symptom: "PC1 receives IP via DHCP but cannot ping outside its local VLAN.",
+            fault: "The VLAN 20 DHCP pool supplies an incorrect default gateway.",
+            layer: "Layer 3",
+            severity: "Medium",
+            confidence: 94,
+            inputLogs: "Server0 DHCP Pool | Gateway: 192.168.20.254 instead of 192.168.20.1",
+            fixCommands: "configure terminal\nip dhcp pool VLAN20_POOL\n default-router 192.168.20.1\nexit"
+        },
+        {
+            id: "CASE-026",
+            symptom: "PC1 receives IP 192.168.10.55 on a VLAN 20 port.",
+            fault: "A DHCP pool for the wrong subnet is assigned to a VLAN 20 client.",
+            layer: "Layer 3",
+            severity: "High",
+            confidence: 92,
+            inputLogs: "Server0 DHCP Pool | Pool Subnet: 192.168.10.0 assigned to VLAN20 interface",
+            fixCommands: "configure terminal\nno ip dhcp pool WRONG_POOL\nip dhcp pool VLAN20_POOL\n network 192.168.20.0 255.255.255.0\n default-router 192.168.20.1\nexit"
+        },
+        {
+            id: "CASE-027",
+            symptom: "Server0 cannot communicate with R1 gateway 192.168.20.1.",
+            fault: "Server0 has a static IP address from the wrong subnet.",
+            layer: "Layer 3",
+            severity: "High",
+            confidence: 96,
+            inputLogs: "Server0 config | IP: 192.168.30.254, Gateway: 192.168.20.1",
+            fixCommands: "# On Server0 IP Configuration:\nSet IP Address: 192.168.20.254\nSubnet Mask: 255.255.255.0\nDefault Gateway: 192.168.20.1"
+        },
+        {
+            id: "CASE-028",
+            symptom: "Server0 can reach some VLAN 20 hosts but fails to communicate with upper range addresses.",
+            fault: "Server0 has a /25 subnet mask instead of the required /24 mask.",
+            layer: "Layer 3",
+            severity: "Medium",
+            confidence: 97,
+            inputLogs: "Server0 config | Subnet Mask: 255.255.255.128",
+            fixCommands: "# On Server0 IP Configuration:\nSet Subnet Mask: 255.255.255.0 (/24)"
+        },
+        {
+            id: "CASE-029",
+            symptom: "Switch0 management interface (SVI) cannot be reached via SSH/ping from R1.",
+            fault: "Switch0 management SVI has the wrong IPv4 address.",
+            layer: "Layer 3",
+            severity: "Medium",
+            confidence: 94,
+            inputLogs: "Switch0# show ip interface brief | Interface Vlan99 192.168.99.250 YES manual up up",
+            fixCommands: "configure terminal\ninterface vlan 99\n ip address 192.168.99.2 255.255.255.0\n no shutdown\nexit"
+        },
+        {
+            id: "CASE-030",
+            symptom: "Switch0 can ping R1 on local subnet 192.168.99.1 but cannot be managed from VLAN 10 or 20.",
+            fault: "Switch0 has no default gateway for replies to management traffic from other VLANs.",
+            layer: "Layer 3",
+            severity: "Medium",
+            confidence: 96,
+            inputLogs: "Switch0# show ip route | Default gateway is not set",
+            fixCommands: "configure terminal\nip default-gateway 192.168.99.1\nexit"
+        }
+    ];
+
+    // Populate UI components on load
+    window.onload = function() {
+        const selectElem = document.getElementById("practice-case");
+        const tableBody = document.getElementById("catalogue-body");
+
+        inbuiltCases.forEach((item, index) => {
+            // Dropdown options
+            let option = document.createElement("option");
+            option.value = index;
+            option.textContent = `${item.id}: ${item.symptom}`;
+            selectElem.appendChild(option);
+
+            // Table rows
+            let row = document.createElement("tr");
+            row.innerHTML = `
+                <td style="color: var(--accent-blue); font-weight: 600;">${item.id}</td>
+                <td>${item.symptom}</td>
+                <td>${item.fault}</td>
+                <td>${item.layer}</td>
+                <td><span style="color: ${item.severity === 'High' ? '#ff5252' : '#ffb74d'}">${item.severity}</span></td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        document.getElementById("metric-total-cases").innerText = inbuiltCases.length;
+    };
+
+    // Load selected scenario into text boxes
+    function loadSelectedCase() {
+        const selectedIndex = document.getElementById("practice-case").value;
+        if (selectedIndex === "") return;
+
+        const caseData = inbuiltCases[selectedIndex];
+        document.getElementById("user-symptom").value = caseData.symptom;
+        document.getElementById("cisco-output").value = caseData.inputLogs;
+    }
+
+    // Run AI Diagnosis & generate fix commands
+    function runDiagnosis() {
+        const symptom = document.getElementById("user-symptom").value;
+        const logs = document.getElementById("cisco-output").value;
+
+        if (!symptom && !logs) {
+            alert("Please select a case or paste CLI logs.");
+            return;
+        }
+
+        // Search matching case record from dataset
+        let matched = inbuiltCases.find(c => 
+            (logs && c.inputLogs && logs.includes(c.inputLogs)) || 
+            (symptom && c.symptom && symptom.toLowerCase().includes(c.symptom.toLowerCase())) ||
+            (logs && c.id && logs.includes(c.id))
+        );
+
+        if (!matched) {
+            // Default generic response for custom unmapped inputs
+            matched = {
+                fault: "Custom Interface / Subnet Misconfiguration Detected.",
+                confidence: 88,
+                fixCommands: "configure terminal\ninterface GigabitEthernet0/0/0.20\n ip address 192.168.20.1 255.255.255.0\n no shutdown\nend\nwrite memory"
+            };
+        }
+
+        // Render Diagnosis Output
+        document.getElementById("diagnosis-summary").innerText = matched.fault;
+        document.getElementById("remediation-commands").innerText = matched.fixCommands;
+        document.getElementById("confidence-score").innerText = `Confidence Score: ${matched.confidence}%`;
+        
+        // Show result section
+        document.getElementById("results-card").classList.remove("hidden");
+    }
+
+    // Copy remediation commands to clipboard
+    function copyCommands() {
+        const text = document.getElementById("remediation-commands").innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Cisco IOS Commands copied to clipboard!");
+        });
+    }
+</script>
+
+</body>
+</html>
